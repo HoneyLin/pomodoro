@@ -32,7 +32,7 @@ setup(
                  'Operating System :: Unix',
                  'Operating System :: MacOS'],
     platforms='any',
-    scripts=['pomodoro', 'pomostat'],
+    scripts=['pomodoro.py', 'pomostat.py'],
     include_package_data=True,
     data_files=['clock.mp3'],
     install_requires=['clize', 'sigtools', 'pandas', 'matplotlib'],

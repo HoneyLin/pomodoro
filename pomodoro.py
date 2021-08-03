@@ -5,7 +5,8 @@ from clize import run
 from sigtools import modifiers
 import sys
 import time
-import subprocess
+from pydub import AudioSegment
+from pydub.playback import play
 from datetime import datetime
 import os
 import configparser
@@ -18,11 +19,9 @@ except ImportError:
 else:
     has_qt = True
 
-
 display = print
 script_dir = os.path.dirname(__file__)
 ALARM_FILE_DIRS = [
-    '.',
     script_dir,
     sys.prefix,
     os.path.join(script_dir, "..", ".."),
@@ -39,13 +38,13 @@ DATA_FILENAME = os.path.expanduser("~/.pomodoro")
 CONFIG_FILENAME = os.path.expanduser("~/.pomodoro.conf")
 DEV_NULL = open(os.devnull, "w")
 
-
 # Parsing config file :
 config = configparser.ConfigParser()
 config.read(CONFIG_FILENAME)
-if 'DEFAULTS' not in config : #if the config doesn't exist or is of the wrong format
-    #writes the default config to the file
-    config['DEFAULTS'] = {'work':'25', 'rest':'5', 'long':'15', 'cycles':'4', 'start':'0', 'repeat':'0', 'alarm':'True', 'notif':'False', 'timer':'False'}
+if 'DEFAULTS' not in config:  # if the config doesn't exist or is of the wrong format
+    # writes the default config to the file
+    config['DEFAULTS'] = {'work': '25', 'rest': '5', 'long': '15', 'cycles': '4', 'start': '0', 'repeat': '0',
+                          'alarm': 'True', 'notif': 'False', 'timer': 'False'}
     with open(CONFIG_FILENAME, 'w') as configfile:
         config.write(configfile)
     config.read(CONFIG_FILENAME)
@@ -88,17 +87,8 @@ def tick(duration, timer):
 
 
 def play_alarm(filename):
-    for alarm_cmd in ALARM_CMDS:
-        cmd = alarm_cmd + [filename]
-        try:
-            p = subprocess.Popen(cmd, stdout=DEV_NULL, stderr=subprocess.PIPE)
-            p.wait()
-        except OSError:
-            # error, try the next alarm cmd
-            continue
-        else:
-            # successful
-            return
+    song = AudioSegment.from_mp3(filename)
+    play(song)
 
 
 def write_pomo(start, stop, tag):
@@ -112,6 +102,7 @@ def write_pomo(start, stop, tag):
     fd.write(line)
     fd.close()
 
+
 def cli_timer(duration):
     for remaining in range(duration, -1, -1):
         sys.stdout.write("\r")
@@ -122,8 +113,10 @@ def cli_timer(duration):
         time.sleep(1)
     print('\n')
 
+
 @modifiers.kwoargs('long', 'cycles', 'start', 'repeat', 'alarm', 'notif', 'timer')
-def main(work=work_default, rest=rest_default, long=long_default, cycles=cycles_default, start=start_default, repeat=repeat_default, alarm=alarm_default, notif=notif_default, timer=timer_default):
+def main(work=work_default, rest=rest_default, long=long_default, cycles=cycles_default, start=start_default,
+         repeat=repeat_default, alarm=alarm_default, notif=notif_default, timer=timer_default):
     """
     work : int
         nb of minuntes of work
